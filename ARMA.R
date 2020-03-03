@@ -54,4 +54,13 @@ ar1
 # Run MA model for the simulated AR(1) process! 
 # Interpret the results!
 
+# Which model do we choose? 
+# How can we check if a model is appropriate?
+# (Hint: use Box.test, AIc and BIC functions)
 
+
+# Empirical analysis
+ARWR <- as.data.frame( quantmod::getSymbols( "ARWR", src = "yahoo", from = "1994-01-30", to = "2020-01-30", auto.assign = FALSE ), row.names = NULL )
+ARWR_price <- ARWR$ARWR.Adjusted
+
+# Calculate the log returns and find the best ARMA model!
