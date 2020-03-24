@@ -17,14 +17,8 @@ LRM$index <- 1:nrow( LRM )
 
 # Plot the four time series and their ACF! What are the characteristics of each?
 
-TSs <- colnames( LRM[ , 1:4 ] )
-res <- lapply( TSs, function( ts ) xyplot( as.formula( paste0( ts, "~ index" ) ), data = LRM, type = "l", main = ts ) )
-do.call( grid.arrange, res )
 
 
-res <- lapply( TSs, function( ts ) xyplot( acf ~ lag, data = acf( LRM[[ ts ]], 200, plot = FALSE ), type = "h", main = ts,
-                                           ylim = c( -0.1, 1.1 ) ) )
-do.call( grid.arrange, res )
 
 
 # Comparing ACF of ARFIMA and AR processes 
