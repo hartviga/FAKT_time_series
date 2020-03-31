@@ -11,6 +11,8 @@ library( tseries )
 # ARIMA
 
 ge <- quantmod::getSymbols( "GE", scr = "yahoo", from = "2016-12-17", to = "2017-12-30", auto.assign = FALSE)
+plot( ge$GE.Adjusted )
+
 ge <- quantmod::dailyReturn( ge$GE.Adjusted )
 plot( ge )
 tsdisplay( ge )
@@ -27,7 +29,8 @@ summary( ge_arima_model )
 # Plot the results
 tsdiag( ge_arima_model )
 qqnorm( resid( ge_arima_model ) )    
-qqline( resid( ge_arima_model ) )   #ekkor lenne norm?lis
+qqline( resid( ge_arima_model ) )
+
 
 # Forecast with the model
 # Out-of-sample
@@ -65,6 +68,7 @@ summary( ge_train_arimax )
 forecast( ge_train_arimax, xreg = sp[ 251:260 ] )
 plot( forecast ( ge_train_arimax, xreg = sp[ 251:260 ] ) )
 
+
 # Forecast error measure
 accuracy( forecast( ge_train_arimax, xreg = sp[ 251:260 ] ) )
 summary( ge_train_arimax )
@@ -72,6 +76,8 @@ accuracy( forecast( ge_train_arimax, xreg = sp[ 251:260 ] ), ge[ 251:260 ] )
 
 
 # Plots
+std_ge <- resid( model1 ) - mean( resid( model1 ) )
+std_ge <- std_ge / sqrt( var( resid( model1 ) ) )
 hist( std_ge, breaks = 20, prob = T )
 curve(dt(x, 1000), from = -5, to = 5, col = "orange", 
       xlab = "quantile", ylab = "density", lwd = 2, add = TRUE )
