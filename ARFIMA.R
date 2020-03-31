@@ -3,9 +3,11 @@ library( latticeExtra )
 library( grid )
 library( gridExtra )
 
+
 # Loading data
 
 GSPC <- quantmod::getSymbols( "^GSPC", from = "1900-01-01", auto.assign = FALSE )
+plot( GSPC$GSPC.Adjusted, type = "l" )
 LRM <- data.frame( abs( quantmod::dailyReturn( GSPC$GSPC.Adjusted ) ) )
 colnames( LRM ) <- "GSPC_return"
 LRM$WN <- rnorm( nrow( LRM ) )
@@ -17,7 +19,14 @@ LRM$index <- 1:nrow( LRM )
 
 # Plot the four time series and their ACF! What are the characteristics of each?
 
+TSs <- colnames( LRM[ , 1:4 ] )
+res <- lapply( TSs, function( ts ) xyplot( as.formula( paste0( ts, "~ index" ) ), data = LRM, type = "l", main = ts ) )
+do.call( grid.arrange, res )
 
+
+res <- lapply( TSs, function( ts ) xyplot( acf ~ lag, data = acf( LRM[[ ts ]], 200, plot = FALSE ), type = "h", main = ts,
+                                           ylim = c( -0.1, 1.1 ) ) )
+do.call( grid.arrange, res )
 
 
 
@@ -46,6 +55,12 @@ plot( 1:1000, arfima_sim, type = "l", xlab = "t", ylab = "y", main = paste0( "d=
 
 # Fit ARIMA modells on the simulation, which is the best model?
 
+par( mfrow = c( 2, 1 ) )
+pacf( arfima_sim )
+acf( arfima_sim )
+
+my_arima <- arima( arfima_sim, order = c( 0, 0, 10 ) )
+summary( my_arima )
 
 ### Estimate ARFIMA
 
