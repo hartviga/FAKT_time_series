@@ -43,12 +43,30 @@ plot( irf( var_canada, impulse = "e", n.ahead = 10, ortho = T ) )
 plot( irf( var_canada, impulse = "e", response = "U", n.ahead = 10, ortho = T ) )
 
 # Through the IRFs we can create the forecast error variance decompositon of the VAR
-fevd_canada <- fevd( var_canada )
+fevd_canada <- vars:: fevd( var_canada, n.ahead = 10 )
 
 par(mar = c(2, 4, 2, 3), oma = c(0, 0, 0, 0))
-plot( fevd( var_canada ) )
+plot( vars:: fevd( var_canada ) )
 # This helps to see the relationships of the variables in a longer horizon
 
+# As fevd uses Cholesky-decomposition results are order-dependent
+# Try building the VAR in a different order
+order_diff_canada <- as.data.frame( cbind( diff_canada[ , 3:4 ], diff_canada[ , 1:2 ] ) )
+order_var_canada <- VAR( order_diff_canada, p = var_lag$selection[ 3 ], type = "both" )
+order_fevd_canada <- vars:: fevd( order_var_canada, n.ahead = 10 )
+
+fevd_canada$e
+order_fevd_canada$e
+
+# Create order-independent forecast error variance decomposition
+library( frequencyConnectedness )
+
+genfevd_canada <- genFEVD( var_canada, n.ahead = 10 )
+order_genfevd_canada <- genFEVD( order_var_canada, n.ahead = 10 )
+
+genfevd_canada
+order_genfevd_canada # Remember that the order in the matrix is different
+# But the values remained the same
 
 #######################
 ### Individual task ###
