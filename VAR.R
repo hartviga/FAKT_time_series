@@ -42,9 +42,20 @@ plot( irf( var_canada, impulse = "e", n.ahead = 10, ortho = T ) )
 # We can plot only one irf
 plot( irf( var_canada, impulse = "e", response = "U", n.ahead = 10, ortho = T ) )
 
+
+# Forecasting
+x_t = c( 1, 2, 3, 4, 5, 6, 7 )
+x_t = 7
+x_t3 = 2 * 0.7
+x_t3
+x_t8 = x_t * 0.7
+x_t8
+x_t9 = x_t8 * 0.7
+x_t9
+
 # Through the IRFs we can create the forecast error variance decompositon of the VAR
 fevd_canada <- vars:: fevd( var_canada, n.ahead = 10 )
-
+# Diebold Yilmaz spillover index
 par(mar = c(2, 4, 2, 3), oma = c(0, 0, 0, 0))
 plot( vars:: fevd( var_canada ) )
 # This helps to see the relationships of the variables in a longer horizon
