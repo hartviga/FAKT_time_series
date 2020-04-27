@@ -2,6 +2,7 @@
 ### Rolling window ###
 ######################
 
+library( vars )
 library( urca )
 library( tseries )
 #install.packages( "tsDyn" )
@@ -12,16 +13,16 @@ library( tsDyn )
 # Apply rolling window estimation with 500-day window
 
 # Download returns
-SP <- quantmod::getSymbols( "^GSPC", scr = "yahoo", from = "2006-12-17", to = "2017-12-30", auto.assign = FALSE)
+SP <- quantmod::getSymbols( "^GSPC", scr = "yahoo", from = "2004-12-17", to = "2017-12-30", auto.assign = FALSE)
 SP_return <- quantmod::dailyReturn( SP$GSPC.Close )
-DX <- quantmod::getSymbols( "DX", scr = "yahoo", from = "2006-12-17", to = "2017-12-30", auto.assign = FALSE)
+DX <- quantmod::getSymbols( "DX", scr = "yahoo", from = "2004-12-17", to = "2017-12-30", auto.assign = FALSE)
 DX_return <- quantmod::dailyReturn( DX$DX.Close )
-BP <- quantmod::getSymbols( "BP", scr = "yahoo", from = "2006-12-17", to = "2017-12-30", auto.assign = FALSE)
+BP <- quantmod::getSymbols( "BP", scr = "yahoo", from = "2004-12-17", to = "2017-12-30", auto.assign = FALSE)
 BP_return <- quantmod::dailyReturn( BP$BP.Close )
-CL <- quantmod::getSymbols( "CL", scr = "yahoo", from = "2006-12-17", to = "2017-12-30", auto.assign = FALSE)
+CL <- quantmod::getSymbols( "CL", scr = "yahoo", from = "2004-12-17", to = "2017-12-30", auto.assign = FALSE)
 CL_return <- quantmod::dailyReturn( CL$CL.Close )
 
-returns <- as.data.frame( matrix( c( SP_return, DX_return, BP_return, CL_return ), nrow = 260, ncol = 4 ) )
+returns <- as.data.frame( matrix( c( SP_return, DX_return, BP_return, CL_return ), ncol = 4 ) )
 colnames( returns ) <- c( "SP", "DX", "BP", "CL" )
 
 plot.ts( returns )
@@ -30,6 +31,51 @@ plot.ts( returns )
 # How does the relationship between S&P500 and crude oil change in time?
 # Plot the value of coefficients and the p values
 
+# This function returns all the VAR models estimated
+RollingVAR <- function( data, window_length ){
+  rolling_var <- list()
+  n <- nrow( data )
+  index <- 1
+  for( window_end in c( window_length:n ) ){
+    window_start <- window_end - window_length + 1
+    var_lag <- VARselect( data[ window_start:window_end, ] )
+    rolling_var[ index ] <- VAR( data[ window_start:window_end, ], p = var_lag$selection[ 3 ], type = "both" )
+    index <- index + 1
+  }
+  return( rolling_var )
+}
+
+# This function extracts the coefficient of the first lag of a given variable
+RollingVARCoefficient <- function( data, window_length, equation_nr, variable_nr ){
+  rolling_phi <- c()
+  n <- nrow( data )
+  index <- 1
+  for( window_end in c( window_length:n ) ){
+    window_start <- window_end - window_length + 1
+    var_lag <- VARselect( data[ window_start:window_end, ] )
+    rolling_var <- VAR( data[ window_start:window_end, ], p = var_lag$selection[ 3 ], type = "both" )
+    rolling_phi[ index ] <- Bcoef( rolling_var )[ equation_nr, variable_nr ]
+    index <- index + 1
+  }
+  return( rolling_phi )
+}
+
+# See results
+window_length <- 500
+rolling_var <- RollingVAR( returns, window_length )
+rolling_phi <- RollingVARCoefficient( returns, window_length, 4, 1 )
+
+
+# Get Date from the indices of quantmod variables
+# The effect of S&P500 on crude oil over time
+layout( matrix( c( 1, 1, 2, 3), 2, 2, byrow = TRUE ) )
+plot( index(SP)[ window_length:nrow( SP ) ], rolling_phi, type = "l",
+      main = "Effect of S&P500 on crude oil", ylab = "Coef",
+      xlab = "Time" )
+plot( index(SP)[ window_length:nrow( SP ) ], CL$CL.Adjusted[ window_length:nrow( SP ) ], type = "l",
+      ylab = "Price", xlab = "Crude oil" )
+plot( index(SP)[ window_length:nrow( SP ) ], SP$GSPC.Adjusted[ window_length:nrow( SP ) ], type = "l",
+      ylab = "Price", xlab = "S&P500" )
 
 
 ############
@@ -66,7 +112,7 @@ summary( jotest )
 # r=2
 
 # We can check whether the linear combinations are stationary
-s <- 1 * p - 5.150612 * q + 13.956499 * r
+s <- 1 * p -  * q + 13.956499 * r
 ts.plot( s )
 adf.test( s )
 
