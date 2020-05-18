@@ -17,6 +17,24 @@ plot( x, hx, type = "l", lty = 2, xlab = "x value",
 abline( v = -qnorm( 1 - lvl ), col = "red", lwd = 2 )
 
 
+# Empirical example
+
+ford <- as.data.frame( quantmod::getSymbols( "F", src = "yahoo", from = "2000-01-30", 
+                                             to = "2020-01-30", auto.assign = FALSE ), row.names = NULL )
+
+plot( ford$F.Adjusted, type = "l" )
+
+# Save it to time-series format (otherwise the JB test do not run)
+adj_price <- ts( ford$F.Adjusted, start = c( 2000, 1, 30 ), end = c( 2020, 1, 30 ), frequency = 250 )
+
+plot( adj_price )
+
+# Calculate returns
+r <- diff( ford$F.Adjusted ) / ford$F.Adjusted[ -length( ford$F.Adjusted ) ] # simple returns
+
+# Plot returns
+plot( r, type = "l" )
+
 # Empirical VaR:
 hist( r, breaks = 100 )
 f_emp_VaR = quantile( -r, 1 - lvl )
@@ -25,6 +43,8 @@ f_emp_VaR
 # One day VaR for $10m portfolio of only Ford stocks
 m10 = 10000000
 m10 * f_emp_VaR
+
+
 
 # General method
 r_roll1 = rollapply( r, 1, sum )
@@ -47,10 +67,16 @@ abline( v = -f_emp10_VaR, col = "red", lwd = 2 )
 f_emp10_VaR
 
 
+hist( r[ 3200:4200 ], breaks = 100 )
+f_emp_VaR1000 = quantile( -r[ 3200:4200 ], 1 - lvl )
+m10 = 10000000
+m10*f_emp_VaR1000
+
+
 # Is it accurate?
 par( mfrow = c( 2, 1) )
-plot( r, type= 'l' )
-plot( f_sq )
+plot( r, type = 'l' )
+plot( r^2, type = "l" )
 
 
 # Using GARCH model!
@@ -68,7 +94,10 @@ f1_v = f_g_f$st[ 1 ] # std dev
 # Compute one day ahead VaR
 f1_VaR = -f1_r + qnorm( 1 - lvl ) * f1_v
 f1_VaR
+f1_VaR * 10000000
 
+# Multi-period VaR:
+# VaR(h)= -r(1)-r(2)-r(3)-...-r(h) + z(crit_value) * sqrt(Var[e(1)]+Var[e(2)]+...+Var[e(h)])
 # Two day ahead
 f2_VaR = -sum( f_g_f$meanF[ 1:2 ] ) + qnorm( 1 - lvl ) * sqrt( sum( f_g_f$st[ 1:2 ]^2 ) )
 f2_VaR
@@ -79,7 +108,7 @@ f10_VaR
 
 # One day VaR for $10m portfolio of only Ford stocks
 m10 = 10000000
-f1_10m_VaR = m10 * f1_VaR
+f1_10m_VaR = m10 * f10_VaR
 f1_10m_VaR # Worst 1% of the time, expect to lose at least this much
 
 # Compare to empirical VaR:
@@ -92,10 +121,10 @@ f_emp10_VaR * 10000000
 
 # Return distribution can get weird
 y <- seq( -4, 4, length = 100 )
-hx <- dnorm(x) # 100 elements from the densitiy function of normal distribution
-hx[ 1:15 ] <- c( 0.005, 0.01, 0.03, 0.07, 0.1, 0.12, 0.13, 0.12, 0.1, 0.07, 0.03, 0.01, 0.007, 0.005, 0.006 )  
-
-plot( x, hx, type = "l", lty = 2, xlab = "x value",
+hy <- dnorm(x) # 100 elements from the densitiy function of normal distribution
+hy[ 1:15 ] <- c( 0.005, 0.01, 0.03, 0.07, 0.1, 0.12, 0.13, 0.12, 0.1, 0.07, 0.03, 0.01, 0.007, 0.005, 0.006 )  
+dev.off()
+plot( x, hy, type = "l", lty = 2, xlab = "x value",
       ylab = "Density", main = "Normal distribution" )
 # Is the VaR realistic?
 
@@ -108,24 +137,10 @@ f_emp1_EF * 10000000
 f_emp1_VaR * 10000000
 
 
-# Estimating GARCH model
 
 
+### Estimating GARCH model ###
 
-ford <- as.data.frame( quantmod::getSymbols( "F", src = "yahoo", from = "2000-01-30", 
-                                             to = "2020-02-30", auto.assign = FALSE ), row.names = NULL )
-plot( ford$F.Adjusted, type = "l" )
-
-# Save it to time-series format (otherwise the JB test do not run)
-adj_price <- ts( ford$F.Adjusted, start = c( 2000, 1, 30 ), end = c( 2020, 2, 30 ), frequency = 250 )
-
-plot( adj_price)
-
-# Calculate returns
-r <- diff( ford$F.Adjusted ) / ford$F.Adjusted[ -length( ford$F.Adjusted ) ] # simple returns
-
-# Plot returns
-plot( r, type = "l" )
 
 #Compute ACF
 r_lag = 20;
